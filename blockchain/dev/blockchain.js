@@ -1,7 +1,10 @@
 import sha256 from "sha256";
+const currentNodeURL = process.argv[3];
 function Blockchain() {
   this.chain = [];
   this.pendingTransactions = [];
+  this.currentNodeURL = currentNodeURL;
+  this.networkNodes = [];
   this.createNewBlock(12558, "yyXyy", "xxYxx");
 }
 // create new block
@@ -98,7 +101,7 @@ Blockchain.prototype.proofOfWork = function (
     hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
   }
   console.log("found nonce", nonce);
-  return hash;
+  return nonce;
 };
 
 export default Blockchain;

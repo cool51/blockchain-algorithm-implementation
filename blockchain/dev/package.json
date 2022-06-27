@@ -6,14 +6,22 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node api.js",
-    "dev": "nodemon api.js"
+    "start": "node networkNode.js 3001",
+    "dev": "nodemon networkNode.js 3001",
+    "node_1": "nodemon networkNode.js 3001 http://localhost:3001",
+    "node_2": "nodemon networkNode.js 3002 http://localhost:3002",
+    "node_3": "nodemon networkNode.js 3003 http://localhost:3003",
+    "node_4": "nodemon networkNode.js 3004 http://localhost:3004",
+    "node_5": "nodemon networkNode.js 3005 http://localhost:3005"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.27.2",
+    "body-parser": "^1.20.0",
     "express": "^4.18.1",
+    "http-status-codes": "^2.2.0",
     "nodemon": "^2.0.18",
     "sha256": "^0.2.0"
   }
