@@ -2,6 +2,7 @@ import sha256 from "sha256";
 function Blockchain() {
   this.chain = [];
   this.pendingTransactions = [];
+  this.createNewBlock(12558, "yyXyy", "xxYxx");
 }
 // create new block
 //inside this block is transaction which have been creted since our last block was mined
@@ -68,6 +69,36 @@ Blockchain.prototype.hashBlock = function (
 
   const hashedData = sha256(concatStringData);
   return hashedData;
+};
+/* 
+
+PoW is an underlying tachnlogy whiach is making blockcahin so secure
+If there wsan no PoW blockchain is just an array/list of blocks which contains transactions. SO any block can be added into chain
+So we need to make sure block added is legit and data inside block is correct else anyone can fake it
+
+in PoW in our case we try to generate hash such that hash starts with 0000 baseed on supplied constant previousblockhash ,currentBlockData and guessed nonce value
+So lot of computation energy is spent finding that nonce value which meets our requirement of hash starting with '0000'
+So  once nonce is correctly guessed it is easy to verify and finaly miner who correctly guessed nonce can add block into blockcahin and get some bitcoin and transaction fee as reward
+
+ How blockcahin will be secure by this PoW?
+ Now if some wanna be hacker wants to go back into blockchain and tries to modify block or any transaction data in block, He/She will have to do so on all block blocks before it as he has to recalculate previous hash which will need lot of computatuoonal power which is  not feasible
+ So block chain becomes more secure as its chain grows longer
+ 
+
+*/
+Blockchain.prototype.proofOfWork = function (
+  previousBlockHash,
+  currentBlockData
+) {
+  let nonce = 0;
+  let hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
+
+  while (hash.substring(0, 4) !== "0000") {
+    nonce++;
+    hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
+  }
+  console.log("found nonce", nonce);
+  return hash;
 };
 
 export default Blockchain;

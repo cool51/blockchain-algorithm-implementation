@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "nodemon": "^2.0.18"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon dev/api.js"
+  }
+}
