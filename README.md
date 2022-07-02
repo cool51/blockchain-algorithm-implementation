@@ -1,1 +1,1 @@
-# Implementation of Blockchain and Decentralized Network Algorithm  using JavaScript & Nodejs 
+# Implementation of Blockchain and Decentralized Network Algorithms  using JavaScript & Nodejs 
