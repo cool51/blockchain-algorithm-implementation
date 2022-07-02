@@ -1,4 +1,6 @@
 import sha256 from "sha256";
+import { v1 as uuid } from "uuid";
+// const uuid = require("uuid/v1");
 const currentNodeURL = process.argv[3];
 function Blockchain() {
   this.chain = [];
@@ -45,9 +47,24 @@ validation occurs when we create new block with createNewBlock() function
 Blockchain.prototype.creteNewTransaction = function (amount, sender, receiver) {
   //amount=amount being sent in transaction
   //sender=sender address,receiver=receiver adderess
-  const newTransaction = { amount: amount, sender: sender, receiver: receiver };
-  this.pendingTransactions.push(newTransaction);
-  return this.getLastBlock()["index"] + 1;
+  const newTransaction = {
+    amount: amount,
+    sender: sender,
+    receiver: receiver,
+    transactionID: uuid().split("-").join(""),
+  };
+  // this.pendingTransactions.push(newTransaction);
+
+  // return this.getLastBlock()["index"] + 1;
+  return newTransaction;
+};
+
+Blockchain.prototype.addTransactionToPendingTransaction = function (
+  newTransactionObj
+) {
+  console.log("PPENDING TRANSACTIOn", newTransactionObj);
+  this.pendingTransactions.push(newTransactionObj);
+  return this.getLastBlock()["index" + 1];
 };
 
 /* 
