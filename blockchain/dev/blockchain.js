@@ -104,11 +104,12 @@ So  once nonce is correctly guessed it is easy to verify and finaly miner who co
  Now if some wanna be hacker wants to go back into blockchain and tries to modify block or any transaction data in block, He/She will have to do so on all block blocks before it as he has to recalculate previous hash which will need lot of computatuoonal power which is  not feasible
  So block chain becomes more secure as its chain grows longer
  
+ 
 
 */
 Blockchain.prototype.proofOfWork = function (
   previousBlockHash,
-  currentBlockData
+  currentBlockData // currentblock data is made of JSON {transactions:[{amount:,sender:,receiver:},{amount:,sender,receiver:}],index:}
 ) {
   let nonce = 0;
   let hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
@@ -119,6 +120,36 @@ Blockchain.prototype.proofOfWork = function (
   }
   console.log("found nonce", nonce);
   return nonce;
+};
+
+/* 
+While applying conseus algoithm we will need to validate whole of blockchain
+i.e  check previous block hash with each of block.previousBlockhash
+
+
+so we need methos chainIsValid for it
+*/
+
+Blockchain.prototype.isChainValid = function (blockchain) {
+  //here blockchain represents bitcoin.chain
+  let isValid = true;
+  for (let i = 1; i < blockchain.length; i++) {
+    const currentBlock = blockchain[i];
+    const prevBlock = blockchain[i - 1];
+    const currentBlockData = {
+      transactions: currentBlock["transactions"],
+      index: currentBlock["index"],
+    };
+    const checkHash = this.hashBlock(
+      prevBlock["hash"],
+      currentBlockData,
+      currentBlock["nonce"]
+    );
+    // console.log(prevBlock["hash"], currentBlockData, currentBlock["index"]);
+    if (checkHash.substring(0, 4) !== "0000") isValid = false;
+  }
+
+  return isValid;
 };
 
 export default Blockchain;

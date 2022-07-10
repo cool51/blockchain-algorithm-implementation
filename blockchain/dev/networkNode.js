@@ -131,6 +131,8 @@ app.post("/register-and-broadcast-node", async (req, res) => {
     const newNodeBulkPassURL = newNodeUrl + "/register-node-bulk";
     await axios.post(newNodeBulkPassURL, {
       allNetworkNodes: [...bitcoin.networkNodes, bitcoin.currentNodeURL],
+      chain: bitcoin.chain,
+      pendingTransactions: bitcoin.pendingTransactions,
     });
 
     // console.log("PROPOGATED TO ALL", propagatedToALL);
@@ -155,9 +157,15 @@ app.post("/register-node", (req, res) => {
   res.status(statusCodes.OK).json({ message: "New Node added" });
 });
 
+/* 
+Created new node will need information of all nodes and status of blockchain so that it can update its own blockchain in sama way
+so new node will request for this through this endpoint 
+*/
 app.post("/register-node-bulk", (req, res) => {
   console.log("NODE BULK ADDED");
   const allNetworkNodes = req.body.allNetworkNodes;
+  const chain = req.body.chain;
+  const pendingTransactions = req.body.pendingTransactions;
 
   allNetworkNodes.map((networkNodeURL) => {
     if (
@@ -165,11 +173,16 @@ app.post("/register-node-bulk", (req, res) => {
       bitcoin.currentNodeURL !== networkNodeURL
     ) {
       bitcoin.networkNodes.push(networkNodeURL);
+      bitcoin.chain = chain;
+      bitcoin.pendingTransactions = pendingTransactions;
     }
   });
   res.status(statusCodes.OK).json({ message: "NODE BULK ADDED" });
 });
-
+/* 
+when new pending transaction is added into blockchain through one of nodes it needs to be broadcasted to all available nodes whiuch is done
+through this endpoint
+*/
 app.post("/transaction/broadcast", async (req, res) => {
   const newTransaction = bitcoin.creteNewTransaction(
     req.body.amount,
@@ -192,9 +205,11 @@ app.post("/transaction/broadcast", async (req, res) => {
     .status(statusCodes.OK)
     .json({ message: "Transaciion added and broadcasted", blockIndex });
 });
-//this receives mined block by other node so that it can be veririfed and added into blockchain
-//if verified push into blockchain adn clear pending transaction
 
+/*
+this receives mined block by other node so that it can be veririfed and added into blockchain
+if verified push into blockchain adn clear pending transaction
+*/
 app.post("/receive-new-block", (req, res) => {
   try {
     const newBlock = req.body.newBlock;
@@ -231,4 +246,65 @@ app.post("/receive-new-block", (req, res) => {
     });
   }
 });
+
+/* 
+Each fullnode is blockchain network independently stores block chain containing only blocks validated by that node 
+So when several nodes all have same blocks in blockchain they are in consensus
+And validation rule they follow to maintain consesus is callled as conseus rule
+
+Conseus will provide us with way to compare one node with other node inside network to confirm we have correct data
+
+For our blockcain we will use logest chain rule i.e  replace chain with node with longest chain 
+Assumption is that log=ngest chain holds correct data as most work wa put into creating chain throw PoW 
+
+Steps:
+Take currentNode and make request to all other nodes to access their blockchain
+iterate through each of blockchain and validate data and check if there is  chain longer than our own chain if so replace our with longest chain
+ 
+
+
+*/
+app.get("/consensus", async (req, res) => {
+  try {
+    let consensusPromise = [];
+    bitcoin.networkNodes.map(async (nNode) => {
+      const nodeBlockChainURL = nNode + "/blockchain";
+      // console.log("URL", nodeBlockChainURL);
+
+      const blockChainPromise = axios.get(nodeBlockChainURL);
+      // console.log("BLOCCHAIN PROMICE", blockChainPromise.data);
+      consensusPromise.push(blockChainPromise);
+    });
+    const results = await Promise.all(consensusPromise);
+
+    const currentChainLength = bitcoin.chain.length;
+    let maxLength = currentChainLength;
+    let newLongestChain = null;
+    let newPendingTransactions = null;
+
+    results.map((result) => {
+      if (bitcoin.isChainValid(result.data.chain.length)) {
+        if (result.data.chain.length > maxLength) {
+          maxLength = result.data.chain.length;
+          newLongestChain = result.data.chain;
+          newPendingTransactions = result.data.pendingTransactions;
+        }
+      }
+    });
+    if (newLongestChain) {
+      bitcoin.chain = newLongestChain;
+      bitcoin.pendingTransactions = newPendingTransactions;
+    }
+    res.status(statusCodes.OK).json({
+      message: "In consensus",
+    });
+  } catch (error) {
+    console.log("asdd", error);
+    res.status(statusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Error ",
+      error: error,
+    });
+  }
+});
+
 app.listen(portNo, () => console.log(` app listening on port ${portNo}.`));
